@@ -372,6 +372,11 @@ package Sidef::Object::Object {
             Sidef::Types::Array::Pair->new($_[0], $_[1]);
         };
 
+        # NamedParam operator
+        *{__PACKAGE__ . '::' . '¦'} = sub {
+            Sidef::Variable::NamedParam->new($_[0], $_[1]);
+        };
+
         # Logical AND
         *{__PACKAGE__ . '::' . '&&'} = sub {
             $_[0] ? $_[1] : $_[0];
