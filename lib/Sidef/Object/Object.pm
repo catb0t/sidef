@@ -219,6 +219,18 @@ package Sidef::Object::Object {
           : (Sidef::Types::Bool::Bool::FALSE);
     }
 
+    sub is_in_subset {
+        my ($self, $obj) = @_;
+
+        no strict 'refs';
+
+        my @parents = @{${$obj . '::'}{ISA}};
+
+        (List::Util::any { $self->is_a($_) } @parents)
+          ? (Sidef::Types::Bool::Bool::TRUE)
+          : (Sidef::Types::Bool::Bool::FALSE);
+    }
+
     sub is_a {
         my ($self, $obj) = @_;
         UNIVERSAL::isa($self, "$obj")

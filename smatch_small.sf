@@ -1,0 +1,4 @@
+class Str1 {}
+subset S < Str,Num { .len }
+
+say "asd".is_in_subset(S)

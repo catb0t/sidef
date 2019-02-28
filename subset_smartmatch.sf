@@ -1,0 +1,45 @@
+# is_a on subsets
+subset StrNum < String, Number
+
+assert("".is_a( StrNum ))
+assert(0.is_a( StrNum ))
+assert( StrNum.is_a( StrNum ))
+assert(! [].is_a( StrNum ))
+assert(! StrNum.is_a( "" ))
+assert(! StrNum.is_a( 0 ))
+assert(! StrNum.is_a( [] ))
+
+subset HashStructure < Hash { .item(:value)~~Hash && .item(:type)~~String }
+
+const ok = :( :type => :a, :value => :( :b => :c ) )
+const not_ok = :( :type => 1, :value => :a )
+
+assert(ok.is_a( Hash ))
+assert(ok.is_a( HashStructure ))
+assert(! HashStructure.is_a( ok ) )
+assert(! Hash().is_a( HashStructure ))
+assert(! not_ok.is_a( HashStructure ))
+assert(! HashStructure.is_a( not_ok ))
+
+# smartmatch operator for subsets
+
+assert("" ~~ StrNum)
+assert(0 ~~ StrNum)
+assert([] !~ StrNum)
+assert(StrNum ~~ StrNum)
+assert(StrNum ~~ "")
+assert(StrNum ~~ 0)
+assert(StrNum !~ [])
+assert(StrNum != [])
+assert(StrNum != "")
+
+subset HashStructure < Hash { .item(:value)~~Hash && .item(:type)~~String }
+
+const ok = :( :type => :a, :value => :( :b => :c ) )
+const not_ok = :( :type => 1, :value => :a )
+
+assert(ok ~~ HashStructure)
+assert(HashStructure ~~ ok)
+assert(Hash() !~ HashStructure)
+assert(not_ok !~ HashStructure)
+assert(HashStructure !~ not_ok)
