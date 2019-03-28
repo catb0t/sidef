@@ -298,6 +298,7 @@ package Sidef::Types::Set::Set {
         $self;
     }
 
+<<<<<<< HEAD
     sub each_2d {
         my ($self, $block) = @_;
 
@@ -309,6 +310,19 @@ package Sidef::Types::Set::Set {
     }
 
     *each_2D = \&each_2d;
+=======
+    sub first_rest {
+        my ($self) = @_;
+
+        my @keys = CORE::keys(%$self);
+        my ($rest, $key) = ($self->dclone, $keys[0]);
+        CORE::delete($rest->{$key});
+
+        ($self->{$key}, $rest);
+    }
+
+    *split1  = \&first_rest;
+>>>>>>> Add the `Set.first_rest` method, and Array tests
 
     sub sort_by {
         my ($self, $block) = @_;
