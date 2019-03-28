@@ -302,6 +302,20 @@ package Sidef::Types::Set::Set {
         $self;
     }
 
+    *each_2D = \&each_2d;
+
+    sub first_rest {
+        my ($self) = @_;
+
+        my @keys = CORE::keys(%$self);
+        my ($rest, $key) = ($self->dclone, $keys[0]);
+        CORE::delete($rest->{$key});
+
+        ($self->{$key}, $rest);
+    }
+
+    *split1  = \&first_rest;
+
     sub sort_by {
         my ($self, $block) = @_;
         $self->values->sort_by($block);
