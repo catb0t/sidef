@@ -11,6 +11,7 @@ package Sidef::Types::String::String {
       q{""}   => \&get_value,
       q{@{}}  => \&chars;
 
+    use Sidef::Types::Block::Block;
     use Sidef::Types::Bool::Bool;
     use Sidef::Types::Number::Number;
 
@@ -818,13 +819,45 @@ package Sidef::Types::String::String {
     }
 
     sub each_line {
-        my ($self, $code) = @_;
+        my ($self, $block) = @_;
+
+        $block //= Sidef::Types::Block::Block::IDENTITY;
 
         foreach my $line (CORE::split(/\R/, $$self)) {
-            $code->run(bless \$line);
+            $block->run(bless \$line);
         }
 
         $self;
+    }
+
+    sub map_lines {
+        my ($self, $block) = @_;
+
+        $block //= Sidef::Types::Block::Block::IDENTITY;
+
+        my @mapped = map { $block->run(bless \$_) } CORE::split(/\R/, $$self);
+
+        Sidef::Types::Array::Array->new(@mapped)
+    }
+
+    sub grep_lines {
+      my ($self, $block) = @_;
+
+      $block //= Sidef::Types::Block::Block::IDENTITY;
+
+      my @filtered = ();
+
+      foreach my $line (CORE::split(/\R/, $$self)) {
+        my $b = bless \$line;
+        if ($block->run($b)) {
+          push @filtered, $b;
+        }
+      }
+
+      Sidef::Types::Array::Array->new(@filtered)
+      # my @grepped = grep { $block->run(bless \$_) } CORE::split(/\R/, $$self);
+
+      # Sidef::Types::Array::Array->new( map { bless \$_ } @grepped )
     }
 
     sub pipe {

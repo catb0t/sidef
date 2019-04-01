@@ -75,6 +75,12 @@ package Sidef::Types::Block::Block {
           : Sidef::Types::Bool::Bool::FALSE;
     }
 
+    sub is_identity { Sidef::Types::Bool::Bool->new( (shift)->{is_identity} ) }
+    sub code {
+      state $x = do { use Data::Dump::Streamer };
+      Sidef::Types::String::String->new( Dump( (shift)->{code} ) )
+    }
+
     sub run {
 
         # Handle function calls
@@ -339,6 +345,31 @@ package Sidef::Types::Block::Block {
         }
 
         wantarray ? @objs : $objs[-1];
+    }
+
+    sub _returns { Sidef::Types::Array::Array->new((shift)->{returns}) }
+
+    sub _args {
+      my ($self) = @_;
+
+      my @methods = ($self, exists($self->{kids}) ? @{$self->{kids}} : ());
+      my @pushed = ();
+      foreach my $method (@methods) {
+        foreach my $var ($method->{vars}) {
+          push @pushed, $var;
+        }
+
+        # print map {
+        #   (exists($_->{slurpy}) ? '*' : '')
+        #   . (exists($_->{type}) ? (Sidef::normalize_type($_->{type}) . ' ') : '')
+        #   . $_->{name}
+        #   . (exists($_->{subset}) ? (' < ' . Sidef::normalize_type($_->{subset})) : '')
+        # } @{$_->{vars}}
+
+      }
+      # use Data::Dumper;
+      # Dumper(@pushed);
+      Sidef::Perl::Perl->new->to_sidef(@pushed)
     }
 
     {

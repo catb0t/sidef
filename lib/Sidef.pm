@@ -441,6 +441,13 @@ package Sidef {
     }
 
     my @caller = caller(1);
+    # foreach my $c (@caller) {
+    #     print $c . "\n";
+    # }
+    print "0: $caller[0]\n";
+    print "1: $caller[1]\n";
+    print "2: $caller[2]\n";
+
     my $from   = Sidef::normalize_method($caller[3]);
     $from = $from eq '.' ? 'main()' : "$from()";
 
