@@ -855,9 +855,6 @@ package Sidef::Types::String::String {
       }
 
       Sidef::Types::Array::Array->new(@filtered)
-      # my @grepped = grep { $block->run(bless \$_) } CORE::split(/\R/, $$self);
-
-      # Sidef::Types::Array::Array->new( map { bless \$_ } @grepped )
     }
 
     sub pipe {
