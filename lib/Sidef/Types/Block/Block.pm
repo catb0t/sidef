@@ -76,10 +76,10 @@ package Sidef::Types::Block::Block {
     }
 
     sub is_identity { Sidef::Types::Bool::Bool->new( (shift)->{is_identity} ) }
-    sub code {
-      state $x = do { use Data::Dump::Streamer };
-      Sidef::Types::String::String->new( Dump( (shift)->{code} ) )
-    }
+    # sub code {
+    #   state $x = do { use Data::Dump::Streamer };
+    #   Sidef::Types::String::String->new( Dump( (shift)->{code} ) )
+    # }
 
     sub run {
 
