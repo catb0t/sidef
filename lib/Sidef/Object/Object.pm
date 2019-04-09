@@ -89,6 +89,8 @@ package Sidef::Object::Object {
         bless {}, __PACKAGE__;
     }
 
+    *call = \&new;
+
     sub say {
         (CORE::say @_)
           ? (Sidef::Types::Bool::Bool::TRUE)
