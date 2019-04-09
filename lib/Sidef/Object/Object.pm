@@ -89,7 +89,7 @@ package Sidef::Object::Object {
         bless {}, __PACKAGE__;
     }
 
-    *call = \&new;
+    # *call = \&new;
 
     sub say {
         (CORE::say @_)
