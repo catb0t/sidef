@@ -309,20 +309,11 @@ package Sidef::Types::Block::Block {
           . "\n\n";
     }
 
-    sub call {
-        my ($block, @args) = @_;
-
-        # Handle block calls
-        if ($block->{type} eq 'block') {
-            shift @_;
-            goto $block->{code};
-        }
-
-        my ($self, @objs) = $block->_multiple_dispatch(@args);
+    sub _check_returns {
+        my ($self, @objs) = @_;
 
         # Check the return types
         if (exists $self->{returns}) {
-
             if ($#{$self->{returns}} != $#objs) {
                 die qq{[ERROR] Wrong number of return values from $self->{type} `}
                   . $self->_name
@@ -343,11 +334,36 @@ package Sidef::Types::Block::Block {
                 }
             }
         }
-
-        wantarray ? @objs : $objs[-1];
     }
 
-    sub _returns { Sidef::Types::Array::Array->new((shift)->{returns}) }
+    sub call {
+        my ($block, @args) = @_;
+
+        # Handle block calls
+        if ($block->{type} eq 'block') {
+            shift @_;
+            my $sub = sub { (goto $block->{code}) };
+            my @objs = $sub->(@_);
+
+            $block->_check_returns(@objs);
+            (@objs)
+        } else {
+          my ($self, @objs) = $block->_multiple_dispatch(@args);
+          $self->_check_returns(@objs);
+          wantarray ? @objs : $objs[-1]
+        }
+    }
+
+    sub _returns {
+        my ($self, $new_val) = @_;
+
+        if ( defined($new_val) ) {
+            $self->{returns} = [ @$new_val ];
+            $self
+        } else {
+            Sidef::Types::Array::Array->new( $self->{returns} )
+        }
+    }
 
     sub _args {
       my ($self) = @_;
