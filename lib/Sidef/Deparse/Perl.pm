@@ -27,14 +27,16 @@ package Sidef::Deparse::Perl {
                               },
 
             lazy_ops => {
-                         '?'     => '?',
-                         '||'    => '||',
-                         '&&'    => '&&',
-                         ':='    => '//=',
-                         '||='   => '||=',
-                         '&&='   => '&&=',
-                         '\\\\'  => '//',
-                         '\\\\=' => '//=',
+                         '?'       => '?',
+                         '||'      => '||',
+                         '&&'      => '&&',
+                         ':='      => '//=',
+                         '||='     => '||=',
+                         '&&='     => '&&=',
+                         '\\\\'    => '//',
+                         '\\\\='   => '//=',
+                         '\\\\>'   => 1,
+                         '\\\\:>'  => 2,
                         },
 
             overload_methods => {
@@ -1525,6 +1527,8 @@ HEADER
 
         # Method call on the self obj (+optional arguments)
         if (exists $expr->{call}) {
+            # use Data::Dumper;
+            # print Dumper($expr);
 
             my $unary;
             my $end = $#{$expr->{call}};
@@ -1598,7 +1602,28 @@ HEADER
                     }
 
                     if (exists($self->{lazy_ops}{$method})) {
-                        $code .= $self->{lazy_ops}{$method} . $self->deparse_args(@{$call->{arg}});
+                        my ($dped) = ($self->deparse_args(@{$call->{arg}}));
+                        print "method: $method\n";
+
+                        # call string method if LHS is defined
+                        # \\>
+                        if ($self->{lazy_ops}{$method} eq 1) {
+                            $code = '((CORE::defined'
+                                  . $code . ')?('
+                                  . $code . $self->_dump_op_call('|>') . $dped
+                                  . '):' . $code . ')'
+
+                        # call string method and assign to LHS only if defined
+                        # \\:>
+                        } elsif ($self->{lazy_ops}{$method} eq 2) {
+                          $code = "CORE::sub:lvalue{my\$r=\\$code"
+                                . ';if(CORE::defined($$r)){$$r=$$r'
+                                . $self->_dump_op_call('|>') . $dped
+                                . '}}->()'
+
+                        } else {
+                            $code .= $self->{lazy_ops}{$method} . $dped;
+                        }
                         next;
                     }
 
@@ -1757,6 +1782,10 @@ HEADER
                     else {
                         ## Old way:
                         #$code .= '->${\\' . q{'} . $method . q{'} . '}';
+
+                        # print "code pre dump_op: $code\n";
+                        # my $dumped = $self->_dump_op_call($method);
+                        # print "dumped: $dumped\n";
 
                         ## New way:
                         $code .= $self->_dump_op_call($method);

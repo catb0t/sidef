@@ -342,8 +342,7 @@ package Sidef::Types::Block::Block {
         # Handle block calls
         if ($block->{type} eq 'block') {
             shift @_;
-            my $sub = sub { (goto $block->{code}) };
-            my @objs = $sub->(@_);
+            my @objs = sub { (goto $block->{code}) }->(@_);
 
             $block->_check_returns(@objs);
             (@objs)

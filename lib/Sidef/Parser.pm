@@ -297,6 +297,8 @@ package Sidef::Parser {
                 # Longest prefix first
                 my @operators = map { quotemeta } qw(
 
+                  \\\\> \\\\:>
+
                   ||= ||
                   &&= &&
 
@@ -324,7 +326,7 @@ package Sidef::Parser {
                   *= *
                   ...
                   != ..
-                  \\\\= \\\\
+                  \\\\ \\\\=
                   !! !
                   : ： ⫶ ¦
                   « » ~
@@ -2855,7 +2857,7 @@ package Sidef::Parser {
         {
             if ((/\G(?![-=]>)/ && /\G(?=$self->{operators_re})/o) || /\G\./gc) {
                 my ($method, $req_arg, $op_type) = $self->get_method_name(code => $opt{code});
-
+                # print "$method req_arg $req_arg $op_type\n";
                 if (defined($method)) {
 
                     my $has_arg;
