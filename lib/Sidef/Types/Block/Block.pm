@@ -495,7 +495,7 @@ package Sidef::Types::Block::Block {
         }
 
         if ($ref eq 'Sidef::Types::Block::Block') {
-            die "[ERROR] Blocks cannot be serialized!";
+            die "[ERROR] TODO: Blocks cannot be serialized!";
         }
 
         return;
