@@ -345,11 +345,11 @@ package Sidef::Types::Block::Block {
             my @objs = sub { (goto $block->{code}) }->(@_);
 
             $block->_check_returns(@objs);
-            (@objs)
+            wantarray ? @objs : $objs[-1]
         } else {
-          my ($self, @objs) = $block->_multiple_dispatch(@args);
-          $self->_check_returns(@objs);
-          wantarray ? @objs : $objs[-1]
+            my ($self, @objs) = $block->_multiple_dispatch(@args);
+            $self->_check_returns(@objs);
+            wantarray ? @objs : $objs[-1]
         }
     }
 
