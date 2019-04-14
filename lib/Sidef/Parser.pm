@@ -7,6 +7,8 @@ package Sidef::Parser {
     use List::Util qw(first);
     use Scalar::Util qw(refaddr);
 
+
+
     sub new {
         my (undef, %opts) = @_;
 
@@ -297,7 +299,8 @@ package Sidef::Parser {
                 # Longest prefix first
                 my @operators = map { quotemeta } qw(
 
-                  \\\\> \\\\:>
+                  \\\\:> \\\\>
+                  \\\\= \\\\
 
                   ||= ||
                   &&= &&
@@ -326,7 +329,6 @@ package Sidef::Parser {
                   *= *
                   ...
                   != ..
-                  \\\\ \\\\=
                   !! !
                   : ： ⫶ ¦
                   « » ~
@@ -1683,6 +1685,10 @@ package Sidef::Parser {
                             my $trait = $1;
                             if ($trait eq 'cached') {
                                 $obj->{cached} = 1;
+                            }
+
+                            elsif (rindex($trait, 'tco') eq 0) {
+                                $obj->{tco} = 1;
                             }
 
                             #elsif ($type eq 'method' and $trait eq 'exported') {

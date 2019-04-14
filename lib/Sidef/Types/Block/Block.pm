@@ -694,6 +694,12 @@ package Sidef::Types::Block::Block {
         $self;
     }
 
+    sub tco {
+        my ($self) = @_;
+        $self->{tco} = 1;
+        $self;
+    }
+
     sub dump {
         Sidef::Types::String::String->new("$_[0]");
     }

@@ -444,12 +444,12 @@ package Sidef {
     # foreach my $c (@caller) {
     #     print $c . "\n";
     # }
-    print "0: $caller[0]\n";
-    print "1: $caller[1]\n";
-    print "2: $caller[2]\n";
+    # print "0: $caller[0]\n";
+    # print "1: $caller[1]\n";
+    # print "2: $caller[2]\n";
 
     my $from   = Sidef::normalize_method($caller[3]);
-    $from = $from eq '.' ? 'main()' : "$from()";
+    $from = $from eq '.' ? 'main()' : "$from\(\)";
 
     my $table   = \%{$self . '::'};
     my @methods = grep { !ref($table->{$_}) and defined(&{$table->{$_}}) } keys(%$table);
@@ -461,8 +461,8 @@ package Sidef {
 
     die(  "[AUTOLOAD] Undefined method `"
         . $method . q{'}
-        . " called from $from\n"
-        . (@candidates ? ("[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ''));
+        . " called from $from"
+        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ' (no alternatives found)'));
     return;
 };
 

@@ -1,0 +1,26 @@
+assert_eq(3, 'abc' \\> :len)
+assert_eq(nil, nil \\> :len)
+
+assert_eq([:a, :c], 'abc' \\> (:split, 'b'))
+
+var f = nil
+assert( !defined(f \\:> :not) )
+assert( !defined(f) )
+
+f = true
+assert_eq( false, f \\:> :not)
+assert( defined(f) )
+assert_eq(false, f)
+
+f = 2
+assert_eq( 4, f \\:> [:pow, 2] )
+assert_eq( 16, f \\:> (:pow, 2) )
+assert_eq(16, f)
+
+f = 4
+assert_eq(2, f /= 2);
+assert(f==2);
+
+assert_eq(-2, (f \\:> :neg))
+f = nil
+assert( !defined(f \\:> :neg) )

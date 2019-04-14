@@ -679,8 +679,9 @@ HEADER
                           . "\$${alphaname}$refaddr\->{code}=Memoize::memoize(\$${alphaname}${refaddr}->{code});\$${alphaname}$refaddr}";
                     }
 
-                    if ($obj->{type} eq 'func' and !$obj->{parent}) {
+                    if ($obj->{tco}) { warn "[WARN] TCO not yet implemented!" }
 
+                    if ($obj->{type} eq 'func' and !$obj->{parent}) {
                         # Special "MAIN" function
                         if (${alphaname} eq 'MAIN') {
                             $self->top_add('require Encode;');
@@ -1603,8 +1604,8 @@ HEADER
 
                     if (exists($self->{lazy_ops}{$method})) {
                         my ($dped) = ($self->deparse_args(@{$call->{arg}}));
-                        print "method: $method\n";
 
+                        # print STDERR "dped: '$dped'; $method\n";
                         # call string method if LHS is defined
                         # \\>
                         if ($self->{lazy_ops}{$method} eq 1) {
@@ -1619,10 +1620,10 @@ HEADER
                           $code = "CORE::sub:lvalue{my\$r=\\$code"
                                 . ';if(CORE::defined($$r)){$$r=$$r'
                                 . $self->_dump_op_call('|>') . $dped
-                                . '}}->()'
+                                . '}$$r}->()'
 
                         } else {
-                            $code .= $self->{lazy_ops}{$method} . $dped;
+                            $code .= $self->{lazy_ops}{$method} . $dped
                         }
                         next;
                     }
@@ -1636,7 +1637,7 @@ HEADER
                     # Reassignment operators, such as: +=, -=, *=, /=, etc...
                     if (exists $self->{reassign_ops}{$method}) {
                         $code =
-                            "CORE::sub:lvalue{my\$r=\\$code;\$\$r=\$\$r"
+                            "CORE::sub:lvalue{my\$r=\\$code" . ';$$r=$$r'
                           . $self->_dump_op_call($self->{reassign_ops}{$method})
                           . $self->deparse_args(@{$call->{arg}}) . '}->()';
                         next;
