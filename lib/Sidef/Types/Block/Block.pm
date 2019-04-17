@@ -360,7 +360,7 @@ package Sidef::Types::Block::Block {
             $self->{returns} = [ @$new_val ];
             $self
         } else {
-            Sidef::Types::Array::Array->new( $self->{returns} )
+            Sidef::Types::Array::Array->new( @{$self->{returns}} )
         }
     }
 
