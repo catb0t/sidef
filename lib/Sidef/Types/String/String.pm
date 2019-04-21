@@ -1593,12 +1593,8 @@ package Sidef::Types::String::String {
           : ($err_is_self ? $self : undef)
     }
 
-    state $_x = do { use Data::Dumper; };
-
     sub _child_packages {
         my ($self, %opts) = @_;
-        # print Dumper(@$pkgs) . "\n";
-        my @res;
         # %opts keys:
         # find: whether to grep (default) or find
         #   the kind of search to do
@@ -1608,12 +1604,12 @@ package Sidef::Types::String::String {
         # print Dumper($opts{pkgs}) . chr(10);
 
         unless ( $opts{recursing} ) {
-            # print Dumper($opts{block}) . "\n";
             if (defined $opts{block}) {
                 my $ref = CORE::ref($opts{block});
                 # print "$ref\n";
                 if ($ref eq 'Sidef::Types::Block::Block') {
-                    $block = sub { $opts{block}->call(@_) }
+                    # mode becomes the "all" default comparison when the block is an IDENTITY TODO: TEST
+                    $block = $opts{block}->{is_identity} ? undef : sub { $opts{block}->call(@_) }
                 }
                 elsif ($ref eq 'CODE') {
                     $block = $opts{block};
@@ -1623,10 +1619,10 @@ package Sidef::Types::String::String {
                 }
             }
         }
+        my @res;
         # print 'block: ' . Dumper($block) . "\n";
         # print 'pkgs: ' . Dumper(@opts{pkgs}) . "\n";
         if (! defined $block) {
-            # print 'default collection' .chr(10);
             for my $pack ( @{ $opts{pkgs} } ) {
                 next unless $pack;
                 no strict 'refs';
@@ -1644,7 +1640,6 @@ package Sidef::Types::String::String {
             }
         } else {
             if (! $opts{find}) {
-                # print 'pkgs: ' . Dumper(@opts{pkgs}) . "\n";
                 for my $pack ( @{ $opts{pkgs} } ) {
                     next unless $pack;
                     no strict 'refs';
@@ -1667,10 +1662,8 @@ package Sidef::Types::String::String {
                 }
             }
             else { # find
-                # print 'find' . chr(10);
                 for my $pack ( @{ $opts{pkgs} } ) {
                     next unless $pack;
-                    # print "find pack $pack\n";
                     no strict 'refs';
                     while ( my ($key, $val) = each( %{ *{ "$pack\::" } } ) ) {
                         local (*ENTRY) = $val;
@@ -1693,7 +1686,7 @@ package Sidef::Types::String::String {
                         }
                     }
                 }
-                return $opts{recursing} ? @res : undef
+                return $opts{recursing} ? @res : undef # returning to 'find'
             }
         }
         return @res
@@ -1729,8 +1722,6 @@ package Sidef::Types::String::String {
                     }
                 )
             ];
-            # print 'roots: ' . Dumper(@root_pkgs) . "\n";
-            # print 'class_name: ' . Dumper($class_name) . "\n";
             # print 'candidates: ' . Dumper($candidates) . "\n";
             for my $cd (@$candidates) {
               # print "cd: $cd\n";
@@ -1748,9 +1739,7 @@ package Sidef::Types::String::String {
     #   but usually can't be roundtripped with to_type alone, so use lookup_ref
     sub meaningful_ref {
         my ($self) = @_;
-        # my $str = "${$self}";
         (my $str = "${$self}") =~ m/^Sidef::Runtime\d*?::.+?::(.+)$/;
-        # print "1: $1 copy: $copy; str: $str\n";
         __PACKAGE__->new($1 // $str)
     }
     *mref        = \&meaningful_ref;
