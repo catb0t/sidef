@@ -1605,7 +1605,7 @@ package Sidef::Types::String::String {
         # block: a perl coderef, a Sidef block, or none
         # pkgs:  list of package root names to search downwards from
         my $block = $opts{block};
-        # print Dumper(\%opts) . chr(10);
+        # print Dumper($opts{pkgs}) . chr(10);
 
         unless ( $opts{recursing} ) {
             # print Dumper($opts{block}) . "\n";
@@ -1656,8 +1656,8 @@ package Sidef::Types::String::String {
                         if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
                             my $dce = (my $key_cut = $key) =~ s/::$//;
                             my $p = $pack . '::' . $key_cut;
-                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut)) );
-                            if (@ret[-1]) {
+                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut), __PACKAGE__-> new($p) ) );
+                            if ($ret[-1]) {
                                 @res = ( @res, $p, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) );
                             } else {
                                 @res = ( @res, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) )
@@ -1680,8 +1680,8 @@ package Sidef::Types::String::String {
                         if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
                             my $dce = (my $key_cut = $key) =~ s/::$//;
                             my $p = $pack . '::' . $key_cut;
-                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut)) );
-                            if (@ret[-1]) {
+                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut), __PACKAGE__->new($p)) );
+                            if ($ret[-1]) {
                                 return $p;
                             }
                             @res = ( @res, $p, $self->_child_packages(
@@ -1704,7 +1704,7 @@ package Sidef::Types::String::String {
 
         my (@res) = ( $self->_child_packages( pkgs => [ "${$self}" ], block => $block, find => !!$find ) );
         if ($find) {
-          return (defined @res[-1]) ? __PACKAGE__->new(@res[-1]) : undef
+          return (defined $res[-1]) ? __PACKAGE__->new($res[-1]) : undef
         } else {
           return Sidef::Types::Array::Array->new( map { bless \$_ } @res )
         }
@@ -1717,18 +1717,18 @@ package Sidef::Types::String::String {
         my $matched = (my $str = "${$self}") =~ m/^(?:(Sidef::Runtime\d*?)::.+?::)?(.+)$/;
         # print "matched: '$matched' 1: '$1' 2: '$2' 3: '$3' 4: '$4'\n";
         if ($matched) {
-            use constant { DEFAULT_ROOT => 'Sidef::Runtime' };
-            # my @root_pkgs  = [$1, DEFAULT_NS];
-            my ($candidates) = [
-                $self->_child_packages( pkgs => [
-                    $1,
-                    @{ $extra_roots // [] },
-                    # this finds
-                    ( grep { $_ =~ m/^Sidef::Runtime\d*?$/ } $self->_child_packages(pkgs => ['Sidef']) ),
-                    DEFAULT_ROOT
-                ] )
-            ];
+            use constant { DEFAULT_ROOTS => ('Sidef::Runtime', 'Sidef') };
             my $class_name = $2;
+            my ($candidates) = [
+                $self->_child_packages(
+                    pkgs => [ $1, @{ $extra_roots // [] }, DEFAULT_ROOTS ],
+                    block => sub {
+                        my ($l, $r, $b) = @_;
+                        # print "l: $l; r: $r; l::r: $l\::$r; b: $b\n";
+                        ($l =~ m/^Sidef::Runtime\d*?$/) or ($b =~ m/${class_name}$/)
+                    }
+                )
+            ];
             # print 'roots: ' . Dumper(@root_pkgs) . "\n";
             # print 'class_name: ' . Dumper($class_name) . "\n";
             # print 'candidates: ' . Dumper($candidates) . "\n";
@@ -1744,6 +1744,8 @@ package Sidef::Types::String::String {
     }
     *resolve_ref = \&lookup_ref;
 
+    # the result of this is short and unambiguous (good for writing to a file)
+    #   but usually can't be roundtripped with to_type alone, so use lookup_ref
     sub meaningful_ref {
         my ($self) = @_;
         # my $str = "${$self}";

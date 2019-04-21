@@ -13,8 +13,7 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
   const refs_A = [
     'Sidef::Runtime::'+id_A,
     'Sidef::Runtime::'+id_A+'::main',
-    'Sidef::Runtime::'+id_A+'::main::A',
-  ]
+    'Sidef::Runtime::'+id_A+'::main::A', ]
   # relies on hash ordering, but the sub-parts (should) always have the same order
   assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(c) )
 
@@ -51,6 +50,11 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
 
   assert_eq(A.ref, 'Sidef::Runtime::not_numbers::main::A'.lookup_ref)
   assert_eq(A.ref, 'Sidef::Runtime::9123123::main::A'.lookup_ref)
+  assert_eq(A.ref, 'Sidef::Runtime1::9123123::main::A'.lookup_ref)
+  assert_eq(A.ref, 'Sidef::Runtime12345::9123123::main::A'.lookup_ref)
+  assert_eq(B.ref, 'Sidef::Runtime1::9123123::main::B'.lookup_ref)
+  assert_eq(B.ref, 'Sidef::Runtime1::912not_numbers::main::B'.lookup_ref)
+  assert_eq(B.ref, 'Sidef::Runtime12345::9123123::main::B'.lookup_ref)
 
   assert_eq(A, 'Sidef::Runtime::9123123::main::A'.lookup_ref.to_type)
   assert_eq(A, 'Sidef::Runtime1::9123123::main::A'.lookup_ref.to_type)
