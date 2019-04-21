@@ -1585,6 +1585,185 @@ package Sidef::Types::String::String {
 
     *to_n = \&to_num;
 
+    sub to_type {
+        my ($self, $err_is_self) = @_;
+        my $t = ${ $self };
+        UNIVERSAL::isa($t, $t)
+          ? $t
+          : ($err_is_self ? $self : undef)
+    }
+
+    state $_x = do { use Data::Dumper; };
+
+    sub _child_packages {
+        my ($self, %opts) = @_;
+        # print Dumper(@$pkgs) . "\n";
+        my @res;
+        # %opts keys:
+        # find: whether to grep (default) or find
+        #   the kind of search to do
+        # block: a perl coderef, a Sidef block, or none
+        # pkgs:  list of package root names to search downwards from
+        my $block = $opts{block};
+        # print Dumper(\%opts) . chr(10);
+
+        unless ( $opts{recursing} ) {
+            # print Dumper($opts{block}) . "\n";
+            if (defined $opts{block}) {
+                my $ref = CORE::ref($opts{block});
+                # print "$ref\n";
+                if ($ref eq 'Sidef::Types::Block::Block') {
+                    $block = sub { $opts{block}->call(@_) }
+                }
+                elsif ($ref eq 'CODE') {
+                    $block = $opts{block};
+                }
+                else {
+                    die "Invalid block argument to _child_packages: wanted a CODE reference or a Block , but got '$ref'\n";
+                }
+            }
+        }
+        # print 'block: ' . Dumper($block) . "\n";
+        # print 'pkgs: ' . Dumper(@opts{pkgs}) . "\n";
+        if (! defined $block) {
+            # print 'default collection' .chr(10);
+            for my $pack ( @{ $opts{pkgs} } ) {
+                next unless $pack;
+                no strict 'refs';
+                while ( my ($key, $val) = each( %{ *{ "$pack\::" } } ) ) {
+                    local (*ENTRY) = $val;
+                    my $entry_has_hash = defined( *ENTRY{HASH} );
+                    use strict 'refs';
+                    ### PACKAGE ###
+                    if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
+                        my $dce = (my $key_cut = $key) =~ s/::$//;
+                        my $p = $pack . '::' . $key_cut;
+                        @res = ( @res, $p, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) );
+                    }
+                }
+            }
+        } else {
+            if (! $opts{find}) {
+                # print 'pkgs: ' . Dumper(@opts{pkgs}) . "\n";
+                for my $pack ( @{ $opts{pkgs} } ) {
+                    next unless $pack;
+                    no strict 'refs';
+                    while ( my ($key, $val) = each( %{ *{ "$pack\::" } } ) ) {
+                        local (*ENTRY) = $val;
+                        my $entry_has_hash = defined( *ENTRY{HASH} );
+                        use strict 'refs';
+                        ### PACKAGE ###
+                        if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
+                            my $dce = (my $key_cut = $key) =~ s/::$//;
+                            my $p = $pack . '::' . $key_cut;
+                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut)) );
+                            if (@ret[-1]) {
+                                @res = ( @res, $p, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) );
+                            } else {
+                                @res = ( @res, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) )
+                            }
+                        }
+                    }
+                }
+            }
+            else { # find
+                # print 'find' . chr(10);
+                for my $pack ( @{ $opts{pkgs} } ) {
+                    next unless $pack;
+                    # print "find pack $pack\n";
+                    no strict 'refs';
+                    while ( my ($key, $val) = each( %{ *{ "$pack\::" } } ) ) {
+                        local (*ENTRY) = $val;
+                        my $entry_has_hash = defined( *ENTRY{HASH} );
+                        use strict 'refs';
+                        ### PACKAGE ###
+                        if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
+                            my $dce = (my $key_cut = $key) =~ s/::$//;
+                            my $p = $pack . '::' . $key_cut;
+                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut)) );
+                            if (@ret[-1]) {
+                                return $p;
+                            }
+                            @res = ( @res, $p, $self->_child_packages(
+                                pkgs => [$p],
+                                block => $block,
+                                find => 1,
+                                recursing => 1
+                            ) );
+                        }
+                    }
+                }
+                return $opts{recursing} ? @res : undef
+            }
+        }
+        return @res
+    }
+
+    sub child_packages {
+        my ($self, $block, $find) = @_;
+
+        my (@res) = ( $self->_child_packages( pkgs => [ "${$self}" ], block => $block, find => !!$find ) );
+        if ($find) {
+          return (defined @res[-1]) ? __PACKAGE__->new(@res[-1]) : undef
+        } else {
+          return Sidef::Types::Array::Array->new( map { bless \$_ } @res )
+        }
+    }
+
+    # TODO: REWRITE using child_packages find
+    sub lookup_ref {
+        my ($self, $extra_roots) = @_;
+        # NOTE: not requiring XXXX to be numbers in Sidef::Runtime::XXXX::...
+        my $matched = (my $str = "${$self}") =~ m/^(?:(Sidef::Runtime\d*?)::.+?::)?(.+)$/;
+        # print "matched: '$matched' 1: '$1' 2: '$2' 3: '$3' 4: '$4'\n";
+        if ($matched) {
+            use constant { DEFAULT_ROOT => 'Sidef::Runtime' };
+            # my @root_pkgs  = [$1, DEFAULT_NS];
+            my ($candidates) = [
+                $self->_child_packages( pkgs => [
+                    $1,
+                    @{ $extra_roots // [] },
+                    # this finds
+                    ( grep { $_ =~ m/^Sidef::Runtime\d*?$/ } $self->_child_packages(pkgs => ['Sidef']) ),
+                    DEFAULT_ROOT
+                ] )
+            ];
+            my $class_name = $2;
+            # print 'roots: ' . Dumper(@root_pkgs) . "\n";
+            # print 'class_name: ' . Dumper($class_name) . "\n";
+            # print 'candidates: ' . Dumper($candidates) . "\n";
+            for my $cd (@$candidates) {
+              # print "cd: $cd\n";
+              if ( $cd =~ m/${class_name}$/ ) {
+                return bless \$cd
+              }
+            }
+            return undef
+        }
+        $self
+    }
+    *resolve_ref = \&lookup_ref;
+
+    sub meaningful_ref {
+        my ($self) = @_;
+        # my $str = "${$self}";
+        (my $str = "${$self}") =~ m/^Sidef::Runtime\d*?::.+?::(.+)$/;
+        # print "1: $1 copy: $copy; str: $str\n";
+        __PACKAGE__->new($1 // $str)
+    }
+    *mref        = \&meaningful_ref;
+    *minimal_ref = \&meaningful_ref;
+    *mini_ref    = \&meaningful_ref;
+
+    # sub ref_to_universal {
+    #     my ($self) = @_;
+    #     if ( (my $m = $self) =~ /^Sidef::Runtime\d*::\d+::(.+::.+)$/ ) {
+    #       return bless \"$1"
+    #     } else {
+    #       return $self
+    #     }
+    # }
+
     {
         my %esc = (
                    "\a"    => "\\a",
@@ -1644,6 +1823,7 @@ package Sidef::Types::String::String {
         *{__PACKAGE__ . '::' . '>>'}  = \&shift_right;
         *{__PACKAGE__ . '::' . '%'}   = \&sprintf;
         *{__PACKAGE__ . '::' . '~'}   = \&not;
+        *{__PACKAGE__ . '::' . '!!'}  = \&to_type;
     }
 };
 

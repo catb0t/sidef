@@ -1,0 +1,73 @@
+class A {}
+class B {}
+
+const id_A = (A.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
+const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
+
+3.times {
+  const c = 'Sidef::Runtime'.child_packages
+  const refs_B = [
+    'Sidef::Runtime::'+id_B,
+    'Sidef::Runtime::'+id_B+'::main',
+    'Sidef::Runtime::'+id_B+'::main::B' ]
+  const refs_A = [
+    'Sidef::Runtime::'+id_A,
+    'Sidef::Runtime::'+id_A+'::main',
+    'Sidef::Runtime::'+id_A+'::main::A',
+  ]
+  # relies on hash ordering, but the sub-parts (should) always have the same order
+  assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(c) )
+
+  assert_eq( ['Sidef::Runtime'], 'Sidef'.child_packages{  |_l, r| r ~~ /Runtime$/ } )
+  assert_eq( 'Sidef::Runtime',   'Sidef'.child_packages({ |_l, r| r ~~ /Runtime$/ }, true) ) # '
+
+  assert_eq( [], 'Nothing'.child_packages )
+  assert_eq( [], 'Sidef'.child_packages{   |_l, r| r ~~ /nothing_real$/ } )
+  assert_eq( nil, 'Sidef'.child_packages({ |_l, r| r ~~ /nothing_real$/ }, true) ) # '
+
+  assert_eq(String.ref.to_type, String)
+  assert_eq(String.ref.to_type(true), String)
+  assert_eq(String.ref.to_type()(1), String(1))
+  assert_eq(String.ref.to_type(true)(1), String(1))
+
+  assert_eq(A.ref.to_type, A)
+  assert_eq(A.ref.to_type(true), A)
+  assert_eq(A.ref.!!, A)
+
+  assert_eq('A'.to_type, nil) # '
+  assert_eq('A'.to_type(true), 'A') # '
+  assert_eq('main::A'.to_type, nil)
+  assert_eq('main::A'.to_type(true), 'main::A')
+  assert_eq(Number.ref.to_type, Number)
+  assert_eq(Number.ref.to_type(true), Number)
+  assert_eq(Number.ref.to_type.class, 'Number')
+  assert_eq(Number.ref.to_type.ref, Number.ref)
+
+  assert_eq(A.ref.lookup_ref, A.ref)
+  assert_eq(A.ref.lookup_ref.to_type, A)
+  assert_eq(A.ref.lookup_ref.to_type(true), A)
+
+  assert_eq('Sidef::Runtime::9123123::garbage::trash'.lookup_ref, nil) # '
+
+  assert_eq(A.ref, 'Sidef::Runtime::not_numbers::main::A'.lookup_ref)
+  assert_eq(A.ref, 'Sidef::Runtime::9123123::main::A'.lookup_ref)
+
+  assert_eq(A, 'Sidef::Runtime::9123123::main::A'.lookup_ref.to_type)
+  assert_eq(A, 'Sidef::Runtime1::9123123::main::A'.lookup_ref.to_type)
+  assert_eq(B, 'Sidef::Runtime1::9123123::main::B'.lookup_ref.to_type)
+  assert_eq(A, 'Sidef::Runtime12345::9123123::main::A'.lookup_ref.to_type)
+  assert_eq(B, 'Sidef::Runtime12345::9123123::main::B'.lookup_ref.to_type)
+  assert_eq('main::A'.lookup_ref, A.ref)
+  assert_eq('main::A'.lookup_ref.to_type, A)
+  assert_eq('main::A'.lookup_ref.to_type(true), A)
+  assert_eq('main::NotExists'.lookup_ref, nil)
+
+  assert_eq(:garbage.mref, :garbage)
+  assert_eq(String.ref.mref, 'Sidef::Types::String::String')
+  assert_eq(String.ref.mref.to_type, String)
+  assert_eq(A.ref.mref, 'main::A')
+  assert_eq(A.ref.mref.to_type, nil)
+  assert_eq(A.ref.mref.to_type(true), 'main::A')
+  assert_eq(A.ref.mref.lookup_ref.to_type, A)
+}
+
