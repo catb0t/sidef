@@ -75,7 +75,17 @@ package Sidef::Types::Block::Block {
           : Sidef::Types::Bool::Bool::FALSE;
     }
 
-    sub is_identity { Sidef::Types::Bool::Bool->new( (shift)->{is_identity} ) }
+    sub is_identity {
+        my ($self) = @_;
+        my $ra = $self->refaddr();
+
+        Sidef::Types::Bool::Bool->new(
+            $self->{is_identity}
+            || ($ra eq IDENTITY->refaddr())
+            || ($ra eq LIST_IDENTITY->refaddr())
+            || ($ra eq ARRAY_IDENTITY->refaddr())
+        )
+    }
     # sub code {
     #   state $x = do { use Data::Dump::Streamer };
     #   Sidef::Types::String::String->new( Dump( (shift)->{code} ) )
@@ -342,7 +352,7 @@ package Sidef::Types::Block::Block {
         # Handle block calls
         if ($block->{type} eq 'block') {
             shift @_;
-            my @objs = sub { (goto $block->{code}) }->(@_);
+            my @objs = (sub { (goto $block->{code}) }->(@_));
 
             $block->_check_returns(@objs);
             wantarray ? @objs : $objs[-1]

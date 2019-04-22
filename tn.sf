@@ -16,6 +16,15 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
     'Sidef::Runtime::'+id_A+'::main::A', ]
   # relies on hash ordering, but the sub-parts (should) always have the same order
   assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(c) )
+  [Block.identity, Block.list_identity, Block.array_identity].each{
+      |block|
+    [false, true].each{ 
+          |is_find|
+        assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(
+          'Sidef::Runtime'.child_packages(block, is_find)
+        ) )
+    }
+  }
 
   assert_eq( ['Sidef::Runtime'], 'Sidef'.child_packages{  |_l, r| r ~~ /Runtime$/ } )
   assert_eq( 'Sidef::Runtime',   'Sidef'.child_packages({ |_l, r| r ~~ /Runtime$/ }, true) ) # '

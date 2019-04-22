@@ -1608,8 +1608,8 @@ package Sidef::Types::String::String {
                 my $ref = CORE::ref($opts{block});
                 # print "$ref\n";
                 if ($ref eq 'Sidef::Types::Block::Block') {
-                    # mode becomes the "all" default comparison when the block is an IDENTITY TODO: TEST
-                    $block = $opts{block}->{is_identity} ? undef : sub { $opts{block}->call(@_) }
+                    # mode becomes the "all" default collection when the block is an IDENTITY
+                    $block = $opts{block}->is_identity() ? undef : sub { $opts{block}->call(@_) }
                 }
                 elsif ($ref eq 'CODE') {
                     $block = $opts{block};
@@ -1651,7 +1651,7 @@ package Sidef::Types::String::String {
                         if (defined($val) && $entry_has_hash && ((my $tmp = $key) =~ m/::$/) && $key ne '<none>::' ) {
                             my $dce = (my $key_cut = $key) =~ s/::$//;
                             my $p = $pack . '::' . $key_cut;
-                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut), __PACKAGE__-> new($p) ) );
+                            my (@ret) = ( $block->(__PACKAGE__->new($pack), __PACKAGE__->new($key_cut), __PACKAGE__->new($p) ) );
                             if ($ret[-1]) {
                                 @res = ( @res, $p, $self->_child_packages(pkgs => [$p], block => $block, recursing => 1) );
                             } else {
@@ -1696,7 +1696,8 @@ package Sidef::Types::String::String {
         my ($self, $block, $find) = @_;
 
         my (@res) = ( $self->_child_packages( pkgs => [ "${$self}" ], block => $block, find => !!$find ) );
-        if ($find) {
+        # the operation wasn't actually find if the block is the identity
+        if ($find && ( (CORE::ref($block) eq 'Sidef::Types::Block::Block') ? !$block->is_identity() : 1 )) {
           return (defined $res[-1]) ? __PACKAGE__->new($res[-1]) : undef
         } else {
           return Sidef::Types::Array::Array->new( map { bless \$_ } @res )
