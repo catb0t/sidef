@@ -18,7 +18,7 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
   assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(c) )
   [Block.identity, Block.list_identity, Block.array_identity].each{
       |block|
-    [false, true].each{ 
+    [false, true].each{
           |is_find|
         assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(
           'Sidef::Runtime'.child_packages(block, is_find)
@@ -54,6 +54,8 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
   assert_eq(A.ref.lookup_ref, A.ref)
   assert_eq(A.ref.lookup_ref.to_type, A)
   assert_eq(A.ref.lookup_ref.to_type(true), A)
+  assert_eq(Number.ref.lookup_ref.to_type, Number)
+  assert_eq(Number.ref.lookup_ref.to_type.ref, Number.ref)
 
   assert_eq('Sidef::Runtime::9123123::garbage::trash'.lookup_ref, nil) # '
 
@@ -83,4 +85,3 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
   assert_eq(A.ref.mref.to_type(true), 'main::A')
   assert_eq(A.ref.mref.lookup_ref.to_type, A)
 }
-

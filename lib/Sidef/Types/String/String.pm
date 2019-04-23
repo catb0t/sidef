@@ -1709,8 +1709,11 @@ package Sidef::Types::String::String {
         my ($self, $extra_roots) = @_;
         # NOTE: not requiring XXXX to be numbers in Sidef::Runtime::XXXX::...
         my $matched = (my $str = "${$self}") =~ m/^(?:(Sidef::Runtime\d*?)::.+?::)?(.+)$/;
-        # print "matched: '$matched' 1: '$1' 2: '$2' 3: '$3' 4: '$4'\n";
-        if ($matched) {
+        # print "matched: '$matched' 1: '$1' 2: '$2' 3: '$3' 4: '$4' " . rindex($2, 'Sidef::') . chr(10);
+        if ((! $matched) || ($matched && ($1 eq '') && (rindex($2, 'Sidef::') == 0))) {
+            return $self
+        }
+        elsif ($matched && (rindex($2, 'Sidef::') == -1)) {
             use constant { DEFAULT_ROOTS => ('Sidef::Runtime', 'Sidef') };
             my $class_name = $2;
             my ($candidates) = [
@@ -1732,7 +1735,7 @@ package Sidef::Types::String::String {
             }
             return undef
         }
-        $self
+        die "[INTERNAL] String.lookup_ref: fall-through in if"
     }
     *resolve_ref = \&lookup_ref;
 

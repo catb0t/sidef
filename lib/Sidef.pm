@@ -22,6 +22,7 @@ package Sidef {
 
     use Sidef::Types::Bool::Bool;
     use Sidef::Types::Number::Number;
+    use Sidef::Types::String::String;
 
     sub new {
         my ($class, %opt) = @_;
@@ -420,8 +421,6 @@ package Sidef {
 *UNIVERSAL::AUTOLOAD = sub {
     my ($self, @args) = @_;
 
-    $self = ref($self) if ref($self);
-
     if (index($self, 'Sidef::') == 0 and index($self, 'Sidef::Runtime') != 0) {
 
         eval { require $self =~ s{::}{/}rg . '.pm' };
@@ -453,17 +452,19 @@ package Sidef {
 
     my $table   = \%{$self . '::'};
     my @methods = grep { !ref($table->{$_}) and defined(&{$table->{$_}}) } keys(%$table);
-
-    my $method = Sidef::normalize_method($AUTOLOAD);
-    my $name   = substr($method, rindex($method, '.') + 1);
+    my $method  = Sidef::normalize_method($AUTOLOAD);
+    my $name    = substr($method, rindex($method, '.') + 1);
 
     my @candidates = Sidef::best_matches($name, \@methods);
 
-    die(  "[AUTOLOAD] Undefined method `"
+    use Data::Dumper;
+
+    my $x = Dumper(\@args);
+    (my $dargs = "$x") =~ s/^\$VAR1 = (\[.*\]);\n$/$1/;
+    die(  '[AUTOLOAD] Undefined method `'
         . $method . q{'}
-        . " called from $from"
-        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ' (no alternatives found)'));
-    return;
+        . ' called from ' .$from
+        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ' (no similar names found)' . chr(10) . '(args: ' . $dargs . ')' ));
 };
 
 1;
