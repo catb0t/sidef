@@ -84,4 +84,15 @@ const id_B = (B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
   assert_eq(A.ref.mref.to_type, nil)
   assert_eq(A.ref.mref.to_type(true), 'main::A')
   assert_eq(A.ref.mref.lookup_ref.to_type, A)
+
+  assert_eq(String.ref.is_non_builtin_type, false)
+  assert_eq(Number.ref.is_non_builtin_type, false)
+
+  assert_eq(A.ref.is_non_builtin_type, true)
+  assert_eq(A.ref.mref.is_non_builtin_type, true)
+  assert_eq(A.ref.mref.lookup_ref.is_non_builtin_type, true)
+
+  assert_eq(B.ref.is_non_builtin_type, true)
+  assert_eq(B.ref.mref.is_non_builtin_type, true)
+  assert_eq(B.ref.mref.lookup_ref.is_non_builtin_type, true)
 }

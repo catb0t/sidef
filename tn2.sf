@@ -1,0 +1,85 @@
+module Mod1 {
+  class A {}
+}
+module mod2 {
+  class B {}
+}
+
+const id_A = (Mod1::A.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
+const id_B = (mod2::B.ref =~ /Sidef::Runtime::(\d+)::.*/)[0]
+
+3.times {
+  const c = 'Sidef::Runtime'.child_packages
+  const refs_B = [
+    'Sidef::Runtime::'+id_B,
+    'Sidef::Runtime::'+id_B+'::mod2',
+    'Sidef::Runtime::'+id_B+'::mod2::B' ]
+  const refs_A = [
+    'Sidef::Runtime::'+id_A,
+    'Sidef::Runtime::'+id_A+'::Mod1',
+    'Sidef::Runtime::'+id_A+'::Mod1::A', ]
+  # relies on hash ordering, but the sub-parts (should) always have the same order
+  assert( [ [refs_A..., refs_B...,], [refs_B..., refs_A...] ].contains(c) )
+
+  assert_eq(Mod1::A.ref.to_type, Mod1::A)
+  assert_eq(Mod1::A.ref.to_type(true), Mod1::A)
+  assert_eq(Mod1::A.ref.!!, Mod1::A)
+
+  assert_eq('A'.to_type, nil) # '
+  assert_eq('A'.to_type(true), 'A') # '
+  assert_eq('Mod1::A'.to_type, nil)
+  assert_eq('mod2::B'.to_type, nil)
+  assert_eq('main::A'.to_type, nil)
+  # main::B shouldn't be available here, but taking it as a symbolic reference
+  #   results in some unblessed class, which is not class B from above
+  # this is commented out due to a Sidef bug
+  # assert_eq('main::B'.to_type, nil)
+  assert_eq('Mod1::A'.to_type(true), 'Mod1::A')
+  assert_eq('mod2::B'.to_type(true), 'mod2::B')
+  assert_eq('main::A'.to_type(true), 'main::A')
+  # assert_eq('main::B'.to_type(true), 'main::B')
+
+  assert_eq(Mod1::A.ref.lookup_ref, Mod1::A.ref)
+  assert_eq(Mod1::A.ref.lookup_ref.to_type, Mod1::A)
+  assert_eq(Mod1::A.ref.lookup_ref.to_type(true), Mod1::A)
+
+  assert_eq(Mod1::A.ref.mref.lookup_ref.to_type, Mod1::A)
+  assert_eq(Mod1::A.ref.mref.lookup_ref.to_type(true), Mod1::A)
+
+  assert_eq('Sidef::Runtime::9123123::garbage::trash'.lookup_ref, nil) # '
+
+  assert_eq(Mod1::A.ref, 'Sidef::Runtime::not_numbers::Mod1::A'.lookup_ref)
+  assert_eq(Mod1::A.ref, 'Sidef::Runtime::9123123::Mod1::A'.lookup_ref)
+  assert_eq(Mod1::A.ref, 'Sidef::Runtime1::9123123::Mod1::A'.lookup_ref)
+  assert_eq(Mod1::A.ref, 'Sidef::Runtime12345::9123123::Mod1::A'.lookup_ref)
+  assert_eq(mod2::B.ref, 'Sidef::Runtime1::9123123::mod2::B'.lookup_ref)
+  assert_eq(mod2::B.ref, 'Sidef::Runtime1::912not_numbers::mod2::B'.lookup_ref)
+  assert_eq(mod2::B.ref, 'Sidef::Runtime12345::9123123::mod2::B'.lookup_ref)
+
+  assert_eq(Mod1::A, 'Sidef::Runtime::9123123::Mod1::A'.lookup_ref.to_type)
+  assert_eq(Mod1::A, 'Sidef::Runtime1::9123123::Mod1::A'.lookup_ref.to_type)
+  assert_eq(mod2::B, 'Sidef::Runtime1::9123123::mod2::B'.lookup_ref.to_type)
+  assert_eq(Mod1::A, 'Sidef::Runtime12345::9123123::Mod1::A'.lookup_ref.to_type)
+  assert_eq(mod2::B, 'Sidef::Runtime12345::9123123::mod2::B'.lookup_ref.to_type)
+  assert_eq('Mod1::A'.lookup_ref, Mod1::A.ref)
+  assert_eq('Mod1::A'.lookup_ref.to_type, Mod1::A)
+  assert_eq('Mod1::A'.lookup_ref.to_type(true), Mod1::A)
+  assert_eq('mod2::B'.lookup_ref.to_type(true), mod2::B)
+  assert_eq('main::NotExists'.lookup_ref, nil)
+  assert_eq('Mod1::NotExists'.lookup_ref, nil)
+  assert_eq('mod2::NotExists'.lookup_ref, nil)
+
+  assert_eq(:garbage.mref, :garbage)
+  assert_eq(Mod1::A.ref.mref, 'Mod1::A')
+  assert_eq(Mod1::A.ref.mref.to_type, nil)
+  assert_eq(Mod1::A.ref.mref.to_type(true), 'Mod1::A')
+  assert_eq(Mod1::A.ref.mref.lookup_ref.to_type, Mod1::A)
+
+  assert_eq(Mod1::A.ref.is_non_builtin_type, true)
+  assert_eq(Mod1::A.ref.mref.is_non_builtin_type, true)
+  assert_eq(Mod1::A.ref.mref.lookup_ref.is_non_builtin_type, true)
+
+  assert_eq(mod2::B.ref.is_non_builtin_type, true)
+  assert_eq(mod2::B.ref.mref.is_non_builtin_type, true)
+  assert_eq(mod2::B.ref.mref.lookup_ref.is_non_builtin_type, true)
+}

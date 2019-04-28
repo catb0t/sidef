@@ -1588,6 +1588,8 @@ package Sidef::Types::String::String {
     sub to_type {
         my ($self, $err_is_self) = @_;
         my $t = ${ $self };
+        # my $is_class = UNIVERSAL::isa($t, $t);
+        # print "self: '$self', is_class: $is_class\n";
         UNIVERSAL::isa($t, $t)
           ? $t
           : ($err_is_self ? $self : undef)
@@ -1704,8 +1706,8 @@ package Sidef::Types::String::String {
         }
     }
 
-    # TODO: REWRITE using child_packages find
     sub lookup_ref {
+        # use Data::Dumper;
         my ($self, $extra_roots) = @_;
         # NOTE: not requiring XXXX to be numbers in Sidef::Runtime::XXXX::...
         my $matched = (my $str = "${$self}") =~ m/^(?:(Sidef::Runtime\d*?)::.+?::)?(.+)$/;
@@ -1735,9 +1737,19 @@ package Sidef::Types::String::String {
             }
             return undef
         }
-        die "[INTERNAL] String.lookup_ref: fall-through in if"
+        die '[INTERNAL] String.lookup_ref: fall-through in if'
     }
     *resolve_ref = \&lookup_ref;
+
+    sub is_non_builtin_type {
+        my ($self) = @_;
+        my $str = "${$self}";
+
+        return ((my $x = $str) =~ m/^Sidef::Runtime\d*?::.+?::.+$/)
+            || ((my $y = $str) =~ m/^(?!Sidef::).*/)
+                ? Sidef::Types::Bool::Bool::TRUE
+                : Sidef::Types::Bool::Bool::FALSE ;
+    }
 
     # the result of this is short and unambiguous (good for writing to a file)
     #   but usually can't be roundtripped with to_type alone, so use lookup_ref
