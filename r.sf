@@ -1,0 +1,1 @@
+say 'Sidef::Types::Array::Pair'.nsub('^(Sidef::Types::)(\w+)::(\w+)', '!B!$2.$3')

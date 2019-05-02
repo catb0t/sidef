@@ -70,12 +70,6 @@ package Sidef::Types::Block::Block {
     sub null_identity  { NULL_IDENTITY }
 
     sub is_identity {
-        $_[0]->{is_identity}
-          ? Sidef::Types::Bool::Bool::TRUE
-          : Sidef::Types::Bool::Bool::FALSE;
-    }
-
-    sub is_identity {
         my ($self) = @_;
         my $ra = $self->refaddr();
 

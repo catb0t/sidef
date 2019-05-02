@@ -600,6 +600,14 @@ package Sidef::Types::String::String {
         $self->new($$self =~ s{$search}{$value}geer);
     }
 
+    sub substitute_native {
+        my ($self, $cap, $sub) = @_;
+        $sub = "\"${ $sub }\"";
+        (my $s = "${ $self }") =~ s{$cap}"$sub"ee;
+        __PACKAGE__->new($s);
+    }
+    *nsub = \&substitute_native;
+
     sub glob {
         my ($self) = @_;
         state $x = require Encode;
