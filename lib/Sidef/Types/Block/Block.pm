@@ -5,6 +5,7 @@ package Sidef::Types::Block::Block {
     use parent qw(Sidef::Object::Object);
 
     use List::Util qw();
+    use Sidef::Perl::Perl;
     use Sidef::Types::Number::Number;
 
     use overload
@@ -62,6 +63,12 @@ package Sidef::Types::Block::Block {
                   LIST_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.LIST_IDENTITY',  code => sub { (@_) }),
                   ARRAY_IDENTITY => __PACKAGE__->new(is_identity => 1, name => 'Block.ARRAY_IDENTITY', code => sub { Sidef::Types::Array::Array->new(@_) }),
                  };
+    use constant {
+                  _REFADDR_ID  => __PACKAGE__->IDENTITY->refaddr(),
+                  _REFADDR_LID => __PACKAGE__->LIST_IDENTITY->refaddr(),
+                  _REFADDR_AID => __PACKAGE__->ARRAY_IDENTITY->refaddr(),
+                  _REFADDR_NID => __PACKAGE__->NULL_IDENTITY->refaddr()
+                 };
 #>>>
 
     sub identity       { IDENTITY }
@@ -71,14 +78,17 @@ package Sidef::Types::Block::Block {
 
     sub is_identity {
         my ($self) = @_;
-        my $ra = $self->refaddr();
 
-        Sidef::Types::Bool::Bool->new(
-            $self->{is_identity}
-            || ($ra eq IDENTITY->refaddr())
-            || ($ra eq LIST_IDENTITY->refaddr())
-            || ($ra eq ARRAY_IDENTITY->refaddr())
-        )
+        ( $self->{is_identity} || do {
+            my $ra = $self->refaddr;
+
+               ($ra eq _REFADDR_ID)
+            || ($ra eq _REFADDR_LID)
+            || ($ra eq _REFADDR_AID)
+            || ($ra eq _REFADDR_NID)
+        } )
+            ? Sidef::Types::Bool::Bool::TRUE
+            : Sidef::Types::Bool::Bool::FALSE;
     }
     # sub code {
     #   state $x = do { use Data::Dump::Streamer };
@@ -317,7 +327,7 @@ package Sidef::Types::Block::Block {
         my ($self, @objs) = @_;
 
         # Check the return types
-        if (exists $self->{returns}) {
+        if (exists $self->{returns}) { # shouldn't this be `defined`? returns being nil is not iterable
             if ($#{$self->{returns}} != $#objs) {
                 die qq{[ERROR] Wrong number of return values from $self->{type} `}
                   . $self->_name
@@ -358,37 +368,42 @@ package Sidef::Types::Block::Block {
     }
 
     sub _returns {
-        my ($self, $new_val) = @_;
+        my ($self, %opts) = @_;
 
-        if ( defined($new_val) ) {
-            $self->{returns} = [ @$new_val ];
+        if ( exists $opts{new_value} ) {
+
+            if ( defined $opts{new_value} ) {
+                $self->{returns} = [ @{ $opts{new_value} } ];
+            } else {
+                undef $self->{returns};
+            }
             $self
+
         } else {
-            Sidef::Types::Array::Array->new( @{$self->{returns}} )
+            defined($self->{returns})
+                ? Sidef::Types::Array::Array->new( @{$self->{returns}} )
+                : undef;
         }
     }
 
     sub _args {
-      my ($self) = @_;
-
-      my @methods = ($self, exists($self->{kids}) ? @{$self->{kids}} : ());
-      my @pushed = ();
-      foreach my $method (@methods) {
-        foreach my $var ($method->{vars}) {
-          push @pushed, $var;
-        }
-
-        # print map {
-        #   (exists($_->{slurpy}) ? '*' : '')
-        #   . (exists($_->{type}) ? (Sidef::normalize_type($_->{type}) . ' ') : '')
-        #   . $_->{name}
-        #   . (exists($_->{subset}) ? (' < ' . Sidef::normalize_type($_->{subset})) : '')
-        # } @{$_->{vars}}
-
-      }
-      # use Data::Dumper;
-      # Dumper(@pushed);
-      Sidef::Perl::Perl->new->to_sidef(@pushed)
+     my ($self) = @_;
+     my @methods = ($self, exists($self->{kids}) ? @{$self->{kids}} : ());
+     my @pushed = ();
+     foreach my $method (@methods) {
+       foreach my $var ($method->{vars}) {
+         push @pushed, $var;
+       }
+       # print map {
+       #   (exists($_->{slurpy}) ? '*' : '')
+       #   . (exists($_->{type}) ? (Sidef::normalize_type($_->{type}) . ' ') : '')
+       #   . $_->{name}
+       #   . (exists($_->{subset}) ? (' < ' . Sidef::normalize_type($_->{subset})) : '')
+       # } @{$_->{vars}}
+     }
+     # use Data::Dumper;
+     # Dumper(@pushed);
+     Sidef::Perl::Perl->new->to_sidef(@pushed)
     }
 
     {
