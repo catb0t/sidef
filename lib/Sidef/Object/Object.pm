@@ -320,8 +320,16 @@ package Sidef::Object::Object {
         no strict 'refs';
 
         sub def_method {
-            my ($self, $name, $block) = @_;
-            *{(CORE::ref($self) || $self) . '::' . $name} = sub {
+            my ($self, $name, $block, $silent_unsafe) = @_;
+
+            my $ref = CORE::ref($self) || $self;
+            my $name = "${ $name }";
+
+            if ( !$silent_unsafe and ($name eq 'call' or $name eq 'new' or $name eq 'init') ) {
+              warn "[WARNING] $ref\.def_method('$name') (re-declaring '$name') is not well-defined and may crash\n"
+            }
+
+            *{$ref . '::' . $name} = sub {
                 $block->call(@_);
             };
             $self;
