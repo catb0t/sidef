@@ -5,7 +5,6 @@ package Sidef::Types::Block::Block {
     use parent qw(Sidef::Object::Object);
 
     use List::Util qw();
-    use Sidef::Perl::Perl;
     use Sidef::Types::Number::Number;
 
     use overload
@@ -89,6 +88,13 @@ package Sidef::Types::Block::Block {
         } )
             ? Sidef::Types::Bool::Bool::TRUE
             : Sidef::Types::Bool::Bool::FALSE;
+    }
+
+    sub identity_kind {
+        my ($self) = @_;
+        defined $self->{id_type}
+            ? $self->{_id_type} //= Sidef::Types::String::String->new($self->{id_type})
+            : undef;
     }
     # sub code {
     #   state $x = do { use Data::Dump::Streamer };
