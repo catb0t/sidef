@@ -57,10 +57,10 @@ package Sidef::Types::Block::Block {
 
 #<<<
     use constant {
-                  IDENTITY       => __PACKAGE__->new(is_identity => 1, name => 'Block.IDENTITY',       code => sub { $_[0] }),
-                  NULL_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.NULL_IDENTITY',  code => sub { }),
-                  LIST_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.LIST_IDENTITY',  code => sub { (@_) }),
-                  ARRAY_IDENTITY => __PACKAGE__->new(is_identity => 1, name => 'Block.ARRAY_IDENTITY', code => sub { Sidef::Types::Array::Array->new(@_) }),
+                  IDENTITY       => __PACKAGE__->new(is_identity => 1, code => sub { $_[0] }, name => 'Block.IDENTITY', id_type => 'I'),
+                  LIST_IDENTITY  => __PACKAGE__->new(is_identity => 1, code => sub { (@_) },  name => 'Block.LIST_IDENTITY', id_type => 'L'),
+                  ARRAY_IDENTITY => __PACKAGE__->new(is_identity => 1, code => sub { Sidef::Types::Array::Array->new(@_) }, name => 'Block.ARRAY_IDENTITY', id_type => 'A', returns => [ 'Sidef::Types::Array::Array' ]),
+                  NULL_IDENTITY  => __PACKAGE__->new(is_identity => 1, code => sub { }, name => 'Block.NULL_IDENTITY', id_type => 'N', returns => [])
                  };
     use constant {
                   _REFADDR_ID  => __PACKAGE__->IDENTITY->refaddr(),
@@ -78,7 +78,7 @@ package Sidef::Types::Block::Block {
     sub is_identity {
         my ($self) = @_;
 
-        ( $self->{is_identity} || do {
+        $self->{_is_identity} //= ( ( $self->{is_identity} || do {
             my $ra = $self->refaddr;
 
                ($ra eq _REFADDR_ID)
@@ -87,7 +87,7 @@ package Sidef::Types::Block::Block {
             || ($ra eq _REFADDR_NID)
         } )
             ? Sidef::Types::Bool::Bool::TRUE
-            : Sidef::Types::Bool::Bool::FALSE;
+            : Sidef::Types::Bool::Bool::FALSE );
     }
 
     sub identity_kind {
@@ -386,9 +386,9 @@ package Sidef::Types::Block::Block {
             $self
 
         } else {
-            defined($self->{returns})
+            $self->{_returns} //= (defined($self->{returns})
                 ? Sidef::Types::Array::Array->new( @{$self->{returns}} )
-                : undef;
+                : undef);
         }
     }
 
