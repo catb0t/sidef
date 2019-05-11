@@ -60,7 +60,7 @@ package Sidef::Types::Block::Block {
                   IDENTITY       => __PACKAGE__->new(is_identity => 1, name => 'Block.IDENTITY',       id_type => 'I', code => sub { $_[0] }, ),
                   LIST_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.LIST_IDENTITY',  id_type => 'L', code => sub { (@_) },  ),
                   ARRAY_IDENTITY => __PACKAGE__->new(is_identity => 1, name => 'Block.ARRAY_IDENTITY', id_type => 'A', code => sub { Sidef::Types::Array::Array->new(@_) }, returns => [ 'Sidef::Types::Array::Array' ]),
-                  NULL_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.NULL_IDENTITY'   id_type => 'N', code => sub { }, returns => [])
+                  NULL_IDENTITY  => __PACKAGE__->new(is_identity => 1, name => 'Block.NULL_IDENTITY',  id_type => 'N', code => sub { }, returns => [])
                  };
     use constant {
                   _REFADDR_ID  => __PACKAGE__->IDENTITY->refaddr(),
