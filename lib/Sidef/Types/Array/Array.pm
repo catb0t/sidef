@@ -693,9 +693,11 @@ package Sidef::Types::Array::Array {
     sub concat {
         my ($self, $arg) = @_;
 
-        ref($self) eq ref($arg)
-          ? bless([@$self, @$arg])
-          : bless([@$self, $arg // ()]);
+        defined $arg
+          ? ref($self) eq ref($arg)
+            ? bless([@$self, @$arg])
+            : bless([@$self, $arg])
+          : $self;
     }
 
     *add = \&concat;
