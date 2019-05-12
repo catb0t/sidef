@@ -695,7 +695,7 @@ package Sidef::Types::Array::Array {
 
         ref($self) eq ref($arg)
           ? bless([@$self, @$arg])
-          : bless([@$self, $arg]);
+          : bless([@$self, $arg // ()]);
     }
 
     *add = \&concat;
