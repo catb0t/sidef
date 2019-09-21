@@ -1625,10 +1625,12 @@ package Sidef::Types::String::String {
                     $block = $opts{block};
                 }
                 else {
-                    die "Invalid block argument to _child_packages: wanted a CODE reference or a Block , but got '$ref'\n";
+                    die "Invalid block argument to _child_packages: wanted a CODE reference or a Block, but got '$ref'\n";
                 }
             }
         }
+
+        # https://metacpan.org/release/Devel-Symdump/source/lib/Devel/Symdump.pm
         my @res;
         # print 'block: ' . Dumper($block) . "\n";
         # print 'pkgs: ' . Dumper(@opts{pkgs}) . "\n";

@@ -421,6 +421,10 @@ package Sidef {
 *UNIVERSAL::AUTOLOAD = sub {
     my ($self, @args) = @_;
 
+    $self = ref($self) if ref($self);
+
+    print "autoload: $self\n";
+
     if (index($self, 'Sidef::') == 0 and index($self, 'Sidef::Runtime') != 0) {
 
         eval { require $self =~ s{::}{/}rg . '.pm' };
@@ -448,12 +452,12 @@ package Sidef {
     # print "2: $caller[2]\n";
 
     my $from   = Sidef::normalize_method($caller[3]);
-    $from = $from eq '.' ? 'main()' : "$from\(\)";
+    $from = $from eq q{.} ? 'main()' : "$from\(\)";
 
     my $table   = \%{$self . '::'};
-    my @methods = grep { !ref($table->{$_}) and defined(&{$table->{$_}}) } keys(%$table);
+    my @methods = grep { ( !ref($table->{$_}) ) and defined(&{$table->{$_}}) } keys(%$table);
     my $method  = Sidef::normalize_method($AUTOLOAD);
-    my $name    = substr($method, rindex($method, '.') + 1);
+    my $name    = substr($method, rindex($method, q{.}) + 1);
 
     my @candidates = Sidef::best_matches($name, \@methods);
 
@@ -464,7 +468,7 @@ package Sidef {
     die(  '[AUTOLOAD] Undefined method `'
         . $method . q{'}
         . ' called from ' .$from
-        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ' (no similar names found)' . chr(10) . '(args: ' . $dargs . ')' ));
+        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (q{ } x 18), sort(@candidates)) . "\n") : ' (no similar names found)' . chr(10) . '(args: ' . $dargs . ')' ));
 };
 
 1;
