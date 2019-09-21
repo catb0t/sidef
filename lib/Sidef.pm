@@ -452,7 +452,7 @@ package Sidef {
     # print "2: $caller[2]\n";
 
     my $from   = Sidef::normalize_method($caller[3]);
-    $from = $from eq q{.} ? 'main()' : "$from\(\)";
+    $from = $from eq '.' ? 'main()' : "$from\(\)";
 
     my $table   = \%{$self . '::'};
     my @methods = grep { ( !ref($table->{$_}) ) and defined(&{$table->{$_}}) } keys(%$table);
@@ -469,7 +469,7 @@ package Sidef {
     die(  '[AUTOLOAD] Undefined method `'
         . $method . q{'}
         . ' called from ' .$from
-        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (q{ } x 18), sort(@candidates)) . "\n") : ' (no similar names found)' . chr(10) . '(args: ' . $dargs . ')' ));
+        . (@candidates ? ("\n[?] Did you mean: " . join("\n" . (' ' x 18), sort(@candidates)) . "\n") : ' (no similar names found)' . chr(10) . '(args: ' . $dargs . ')' ));
 };
 
 1;
