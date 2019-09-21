@@ -456,8 +456,9 @@ package Sidef {
 
     my $table   = \%{$self . '::'};
     my @methods = grep { ( !ref($table->{$_}) ) and defined(&{$table->{$_}}) } keys(%$table);
-    my $method  = Sidef::normalize_method($AUTOLOAD);
-    my $name    = substr($method, rindex($method, q{.}) + 1);
+
+    my $method = Sidef::normalize_method($AUTOLOAD);
+    my $name   = substr($method, rindex($method, q{.}) + 1);
 
     my @candidates = Sidef::best_matches($name, \@methods);
 
