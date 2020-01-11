@@ -1615,6 +1615,8 @@ HEADER
                                   . '):' . $code . ')'
 
                         # call string method and assign to LHS only if defined
+                        # i would have named this \\!> or \\=> etc, but that
+                        #   breaks the parser
                         # \\:>
                         } elsif ($self->{lazy_ops}{$method} eq 2) {
                           $code = "CORE::sub:lvalue{my\$r=\\$code"
