@@ -178,6 +178,8 @@ package Sidef::Types::Block::Block {
 
             my $table = $self->{table};
 
+            print Data::Dumper($table);
+
             my %seen;
             my @left_args;
             my @vars = exists($method->{vars}) ? @{$method->{vars}} : ();
